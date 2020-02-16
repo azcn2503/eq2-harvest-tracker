@@ -4,9 +4,23 @@ const _ = require("lodash");
 const Tail = require("tail").Tail;
 const blessed = require("blessed");
 
-let box;
 let screen;
 let table;
+let tableBox;
+let tableTitle;
+let lastPullBox;
+let lastPullText;
+let lastPullTitle;
+let lastPullTags;
+
+function Pull(timestamp) {
+  return {
+    timestamp,
+    rare: false,
+    bountiful: false,
+    harvests: []
+  };
+}
 
 function initBlessed() {
   screen = blessed.screen({
@@ -33,20 +47,23 @@ function initBlessed() {
       scrollbar: {
         fg: "white",
         bg: "black"
+      },
+      header: {
+        bold: true
       }
     },
     data: [],
     border: {
       type: "line"
     },
-    align: "left"
+    align: "left",
+    tags: true
   });
 
   tableTitle = blessed.text({
     parent: tableBox,
     top: 0,
     left: 2,
-    // width: 10,
     content: " Harvest table ",
     style: {
       bg: "white",
@@ -66,7 +83,8 @@ function initBlessed() {
     height: "100%",
     border: {
       type: "line"
-    }
+    },
+    tags: true
   });
 
   lastPullTitle = blessed.text({
@@ -80,6 +98,17 @@ function initBlessed() {
     content: " Last pull "
   });
 
+  lastPullTags = blessed.text({
+    parent: lastPullBox,
+    top: "100%-5",
+    right: 2,
+    style: {
+      bg: "white",
+      fg: "black"
+    },
+    content: ""
+  });
+
   screen.append(tableBox);
   screen.append(lastPullBox);
 
@@ -89,10 +118,15 @@ function initBlessed() {
   });
 }
 
-function buildPullMessage({ count, name, sourceNode, flags }) {
-  return `${
-    flags.rare ? "{yellow-fg}" : ""
-  }${count} ${name} from ${sourceNode}${flags.rare ? "{/}" : ""}`;
+function buildHarvestMessage({ count, name, sourceNode, rare }, key) {
+  return wrapLabel({
+    rare,
+    label: `${count} ${name} from ${sourceNode}`
+  });
+}
+
+function wrapLabel({ rare, label }) {
+  return `${rare ? "{yellow-fg}" : ""}${label}${rare ? "{/}" : ""}`;
 }
 
 function updateTable({ stats }) {
@@ -100,49 +134,47 @@ function updateTable({ stats }) {
     const data = [
       ["Name", "Count"],
       ...Object.values(stats.raw).map(r => [
-        `${r.flags.rare ? "* " : ""}${r.name}`,
-        `${r.count}`
+        wrapLabel({
+          rare: r.rare,
+          label: r.name
+        }),
+        wrapLabel({
+          rare: r.rare,
+          label: r.count
+        })
       ])
     ];
     table.setData(data);
   }
 }
 
-function updateLastPull({ count, name, sourceNode, flags, pullCache }) {
-  if (sourceNode) {
-    lastPullText.content = `Last pull:\n${buildPullMessage({
-      count,
-      name,
-      sourceNode,
-      flags
-    })}`;
-  } else {
-    lastPullText.content = "Harvest something to get started...";
+function updateLastPull({ rare, bountiful, harvests = [] } = {}) {
+  if (harvests.length) {
+    lastPullText.setContent(`${harvests.map(buildHarvestMessage).join("\n")}`);
+    let tags = [];
+    if (harvests.some(h => h.rare)) {
+      tags.push("rare");
+    }
+    if (bountiful) {
+      tags.push("bountiful");
+    }
+    lastPullTags.setContent(` ${tags.join(", ")} `);
   }
 }
 
 function initMonitor() {
-  const tail = new Tail(
-    "/mnt/8fabaada-c55f-42bb-b504-7b34f3e038b2/Games/Lutris/EverQuest II/drive_c/users/Public/Daybreak Game Company/Installed Games/EverQuest II/logs/Thurgadin/eq2log_Fourchan.txt"
-  );
+  const tail = new Tail("./fixtures/eq2log_Fourchan.txt");
 
   const stats = {
     raw: {}
   };
 
-  let flags = {
-    rare: false,
-    bountiful: 0
-  };
-
-  let pullCache = [];
-
-  function processHarvest({ count, name, sourceNode }) {
+  function updateStats({ count, name, sourceNode, rare }) {
     const { count: statsCount = 0, sourceNodes: statsSourceNodes = [] } =
       stats.raw[name] || {};
     stats.raw[name] = {
       ...stats.raw[name],
-      flags: Object.assign({}, flags),
+      rare,
       name,
       count: statsCount + +count,
       sourceNodes: _.uniq([...statsSourceNodes, sourceNode])
@@ -153,57 +185,38 @@ function initMonitor() {
     stats.raw = sortedObj;
   }
 
-  let lastTimestamp = "";
-  let pull = {};
+  let pull = new Pull("");
 
   tail.on("line", data => {
-    const [timestamp] = /^\(\d+\)/.exec(data) || [];
+    const [, timestamp] = /^\(\d+\)\[(.+?)\]/.exec(data) || [];
     if (!timestamp) {
       return;
     }
 
-    debugger;
+    if (timestamp !== pull.timestamp) {
+      pull = new Pull(timestamp);
+    }
 
     if (data.includes("You make a bountiful harvest")) {
-      flags.bountiful = 1;
+      pull.bountiful = true;
     } else if (data.includes("You have found a rare item!")) {
-      flags.rare = true;
+      pull.rare = true;
     } else if (data.includes("You acquire")) {
       const match = /You acquire (\d+) \\aITEM.+?:(.+?)\\\/a from the (.+?)\./.exec(
         data
       );
       if (match) {
-        if (flags.pullCache === 0) {
-          pullCache = [];
-        }
         const [, count, name, sourceNode] = match;
-        pullCache.push({
-          count,
-          name,
-          sourceNode,
-          flags: Object.assign({}, flags)
-        });
-        processHarvest({ count, name, sourceNode });
+        pull.harvests.push({ count, name, sourceNode, rare: pull.rare });
+        updateStats({ count, name, sourceNode, rare: pull.rare });
+        updateLastPull(pull);
         updateTable({
           stats
         });
-        updateLastPull({
-          count,
-          name,
-          sourceNode,
-          flags,
-          pullCache
-        });
         screen.render();
 
-        if (flags.rare) {
-          flags.rare = false;
-        }
-
-        if (flags.bountiful === 1) {
-          flags.bountiful += 1;
-        } else if (flags.bountiful === 2) {
-          flags.bountiful = 0;
+        if (pull.rare) {
+          pull.rare = false;
         }
       }
     }
