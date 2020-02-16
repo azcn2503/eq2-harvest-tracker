@@ -4,6 +4,13 @@ const _ = require("lodash");
 const Tail = require("tail").Tail;
 const blessed = require("blessed");
 
+const [node, self, pathToLogFile] = process.argv;
+
+if (!pathToLogFile) {
+  console.error("No path to log file provided");
+  process.exit(1);
+}
+
 let screen;
 let table;
 let tableBox;
@@ -163,7 +170,7 @@ function updateLastPull({ rare, bountiful, harvests = [] } = {}) {
 }
 
 function initMonitor() {
-  const tail = new Tail("./fixtures/eq2log_Fourchan.txt");
+  const tail = new Tail(pathToLogFile);
 
   const stats = {
     raw: {}
@@ -185,15 +192,14 @@ function initMonitor() {
     stats.raw = sortedObj;
   }
 
-  let pull = new Pull("");
+  let pull = new Pull(0);
 
   tail.on("line", data => {
-    const [, timestamp] = /^\(\d+\)\[(.+?)\]/.exec(data) || [];
-    if (!timestamp) {
-      return;
-    }
+    const timestamp = +new Date();
 
-    if (timestamp !== pull.timestamp) {
+    // 500ms to allow for delay in filesystem writing related lines.
+    // less time than a harvest takes.
+    if (timestamp > pull.timestamp + 500) {
       pull = new Pull(timestamp);
     }
 
