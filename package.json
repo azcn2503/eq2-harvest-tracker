@@ -1,0 +1,16 @@
+{
+  "name": "eq2log",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Aaron Cunnington <azcn2503@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "^1.19.1"
+  },
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "colors": "^1.4.0",
+    "lodash": "^4.17.15",
+    "tail": "^2.0.3"
+  }
+}
