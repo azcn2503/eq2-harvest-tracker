@@ -1,4 +1,0 @@
-(1581848111)[Sun Feb 16 10:15:11 2020] You make a bountiful harvest!
-(1581848111)[Sun Feb 16 10:15:11 2020] You have found a rare item!
-(1581848111)[Sun Feb 16 10:15:11 2020] You acquire 1 \aITEM -985993535 1058133322:Jumping Creeper\/a from the crawling root break.
-(1581848111)[Sun Feb 16 10:15:11 2020] You acquire 2 \aITEM -521413787 -1637582842:Slow Creeping Root\/a from the crawling root break.
