@@ -6,6 +6,12 @@ import * as blessed from "blessed";
 
 const [, , pathToLogFile] = process.argv;
 
+const HARVEST_VERB_PATTERN = "(acquire|mined|catch|forest|gathered)";
+const harvestTestRegExp = new RegExp(`You ${HARVEST_VERB_PATTERN}`);
+const harvestMatchRegExp = new RegExp(
+  `You ${HARVEST_VERB_PATTERN} (\\d+) \\\\aITEM.+?:(.+?)\\\\\/a from the (.+?)\\.`
+);
+
 if (!pathToLogFile) {
   console.error("No path to log file provided");
   process.exit(1);
@@ -197,7 +203,7 @@ function updateTable(stats: StatsType): void {
 function updateLastPullTimer(timestamp: number): void {
   const seconds = Math.round((Date.now() - timestamp) / 1000);
   lastPullTitle.setContent(
-    ` Last pull (${seconds} second${seconds !== 1 ? "s" : ""} ago)`
+    ` Last pull (${seconds} second${seconds !== 1 ? "s" : ""} ago) `
   );
   screen.render();
 }
@@ -263,12 +269,10 @@ function initMonitor(): void {
       pull.bountiful = true;
     } else if (data.includes("You have found a rare item!")) {
       pull.rare = true;
-    } else if (data.includes("You acquire")) {
-      const match = /You acquire (\d+) \\aITEM.+?:(.+?)\\\/a from the (.+?)\./.exec(
-        data
-      );
+    } else if (harvestTestRegExp) {
+      const match = harvestMatchRegExp.exec(data);
       if (match) {
-        const [, count, name, sourceNode] = match;
+        const [, verb, count, name, sourceNode] = match;
         pull.harvests.push({
           count: +count,
           name,
