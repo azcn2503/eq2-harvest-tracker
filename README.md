@@ -2,6 +2,8 @@
 
 Track your harvesting adventures.
 
+![Screenshot](https://imgur.com/42BBfo0.png)
+
 ### Requirements
 
 - Node
