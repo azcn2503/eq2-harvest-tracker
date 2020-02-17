@@ -1,10 +1,11 @@
 import * as _ from "lodash";
 import { Tail } from "tail";
+import config from "config";
 
 import Pull from "./pull";
 import { HarvestType, PullType, StatsType } from "./types";
 
-const HARVEST_VERB_PATTERN = "(acquire|mined|catch|forest|gathered)";
+const HARVEST_VERB_PATTERN = `(${config.pullVerbs.join("|")})`;
 const harvestTestRegExp = new RegExp(`You ${HARVEST_VERB_PATTERN}`);
 const harvestMatchRegExp = new RegExp(
   `You ${HARVEST_VERB_PATTERN} (\\d+) \\\\aITEM.+?:(.+?)\\\\\/a from the (.+?)\\.`
@@ -131,9 +132,11 @@ class LogMonitor {
     tail.on("line", data => {
       const timestamp = +new Date();
 
-      // 500ms to allow for delay in filesystem writing related lines.
-      // less time than a harvest takes.
-      if (timestamp > pull.timestamp + 500) {
+      // A pull can include multiple rares and bountiful harvests spread over separate log lines.
+      // A pull is therefore scoped to a fixed block of time in the log file.
+      // Here, we check if the current timestamp is greater than the previous pull timestamp plus the "minimum pull duration",
+      // which in the Blood of Luclin expansion can be as low as 750ms.
+      if (timestamp > pull.timestamp + config.minimumPullDuration) {
         pull = new Pull(timestamp).get();
       }
 

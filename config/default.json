@@ -1,0 +1,4 @@
+{
+  "pullVerbs": ["acquire", "mined", "catch", "forest", "gathered"],
+  "minimumPullDuration": 750
+}
