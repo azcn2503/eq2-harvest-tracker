@@ -1,7 +1,7 @@
 {
   "name": "eq2log",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "built/index.js",
   "author": "Aaron Cunnington <azcn2503@gmail.com>",
   "license": "MIT",
   "devDependencies": {
@@ -9,12 +9,17 @@
     "prettier": "^1.19.1"
   },
   "dependencies": {
+    "@types/blessed": "^0.1.17",
+    "@types/lodash": "^4.14.149",
+    "@types/node": "^13.7.1",
+    "@types/tail": "^2.0.0",
     "blessed": "^0.1.81",
     "colors": "^1.4.0",
     "lodash": "^4.17.15",
-    "tail": "^2.0.3"
+    "tail": "^2.0.3",
+    "typescript": "^3.7.5"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "tsc && node built/index.js"
   }
 }
