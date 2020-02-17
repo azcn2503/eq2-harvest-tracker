@@ -86,16 +86,22 @@ class LogMonitor {
     this.screen.render();
   }
 
+  updateRaw(name: string, diff: { [key: string]: any }): void {
+    this.stats.raw[name] = {
+      ...this.stats.raw[name],
+      ...diff
+    };
+  }
+
   updateStats({ count, name, sourceNode, rare }): void {
     const { count: statsCount = 0, sourceNodes: statsSourceNodes = [] } =
       this.stats.raw[name] || {};
-    this.stats.raw[name] = {
-      ...this.stats.raw[name],
+    this.updateRaw(name, {
       rare,
       name,
       count: statsCount + +count,
       sourceNodes: _.uniq([...statsSourceNodes, sourceNode])
-    };
+    });
     const sorted = _.sortBy(this.stats.raw, stat => stat.count).reverse();
     const sortedObj = {};
     sorted.forEach(raw => (sortedObj[raw.name] = raw));

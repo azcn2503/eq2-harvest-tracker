@@ -13,6 +13,7 @@ export type RawType = {
   name: string;
   count: number;
   sourceNodes: string[];
+  value?: number;
 };
 
 export type HarvestType = {

@@ -23,11 +23,6 @@ class Blessed {
       keys: true,
       mouse: true,
       style: {
-        hover: {
-          border: {
-            fg: "cyan"
-          }
-        },
         scrollbar: {
           fg: "white",
           bg: "black"
@@ -64,13 +59,6 @@ class Blessed {
       height: "100%",
       border: {
         type: "line"
-      },
-      style: {
-        hover: {
-          border: {
-            fg: "cyan"
-          }
-        }
       },
       scrollable: true,
       mouse: true,
