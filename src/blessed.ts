@@ -2,29 +2,20 @@ import * as blessed from "blessed";
 
 class Blessed {
   init() {
-    let screen;
-    let table;
-    let tableBox;
-    let tableTitle;
-    let lastPullBox;
-    let lastPullText;
-    let lastPullTitle;
-    let lastPullTags;
-
-    screen = blessed.screen({
+    const screen = blessed.screen({
       smartCSR: true
     });
 
     screen.title = "Harvest Monitor";
 
-    tableBox = blessed.box({
+    const tableBox = blessed.box({
       top: 0,
       left: 0,
       width: "100%",
       height: "100%-5"
     });
 
-    table = blessed.table({
+    const table = blessed.table({
       parent: tableBox,
       width: "100%",
       height: "100%",
@@ -50,7 +41,7 @@ class Blessed {
       tags: true
     });
 
-    tableTitle = blessed.text({
+    const tableTitle = blessed.text({
       parent: tableBox,
       top: 0,
       left: 2,
@@ -61,13 +52,13 @@ class Blessed {
       }
     });
 
-    lastPullBox = blessed.box({
+    const lastPullBox = blessed.box({
       top: "100%-5",
       width: "100%",
       height: 5
     });
 
-    lastPullText = blessed.box({
+    const lastPullText = blessed.box({
       parent: lastPullBox,
       width: "100%",
       height: "100%",
@@ -87,7 +78,7 @@ class Blessed {
       tags: true
     });
 
-    lastPullTitle = blessed.text({
+    const lastPullTitle = blessed.text({
       parent: lastPullBox,
       top: "100%-5",
       left: 2,
@@ -98,7 +89,7 @@ class Blessed {
       content: " Last pull "
     });
 
-    lastPullTags = blessed.text({
+    const lastPullTags = blessed.text({
       parent: lastPullBox,
       top: "100%-5",
       right: 2,

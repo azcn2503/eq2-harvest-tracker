@@ -11,9 +11,8 @@ if (!pathToLogFile) {
 }
 
 const blessedElements = new Blessed().init();
-const logMonitor = new LogMonitor({
+
+new LogMonitor({
   pathToLogFile,
   ...blessedElements
 }).start();
-
-blessedElements.screen.render();
