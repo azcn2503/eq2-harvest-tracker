@@ -10,6 +10,7 @@ class Pull {
       timestamp: this.timestamp,
       rare: false,
       bountiful: false,
+      pony: false,
       harvests: []
     };
   }

@@ -56,7 +56,12 @@ class LogMonitor {
     };
   }
 
-  updateLastPull({ timestamp, bountiful, harvests = [] }: PullType): void {
+  updateLastPull({
+    timestamp,
+    bountiful,
+    pony,
+    harvests = []
+  }: PullType): void {
     if (harvests.length) {
       this.lastPullText.setContent(
         `${harvests.map(buildHarvestMessage).join("\n")}`
@@ -67,6 +72,9 @@ class LogMonitor {
       }
       if (bountiful) {
         tags.push("bountiful");
+      }
+      if (pony) {
+        tags.push("pony");
       }
       this.lastPullTags.setContent(` ${tags.join(", ")} `);
       clearInterval(this.lastPullInterval);
@@ -93,7 +101,7 @@ class LogMonitor {
     };
   }
 
-  updateStats({ count, name, sourceNode, rare }): void {
+  updateStats({ count, name, sourceNode, rare }: HarvestType): void {
     const { count: statsCount = 0, sourceNodes: statsSourceNodes = [] } =
       this.stats.raw[name] || {};
     this.updateRaw(name, {
@@ -146,7 +154,36 @@ class LogMonitor {
         pull = new Pull(timestamp).get();
       }
 
-      if (data.includes("You make a bountiful harvest")) {
+      if (pull.pony && pull.harvests.length > 0) {
+        if (data.includes("Your Pack Pony has found a bonus harvest from")) {
+          const match = /Your Pack Pony has found a bonus harvest from (.+?)$/.exec(
+            data
+          );
+          if (match) {
+            const [, sourceNode] = match;
+            pull.harvests[0].sourceNode = sourceNode;
+            this.updateStats(pull.harvests[0]);
+            this.updateLastPull(pull);
+            this.updateTable();
+            this.screen.render();
+          }
+        } else {
+          pull = new Pull(timestamp).get();
+        }
+      }
+
+      if (data.includes("You receive")) {
+        // Potential pony harvest
+        const match = /You receive (\d+) \\aITEM.+?:(.+?)s\\/.exec(data);
+        if (match) {
+          const [, count, name] = match;
+          pull.pony = true;
+          pull.harvests.push({
+            count: +count,
+            name
+          });
+        }
+      } else if (data.includes("You make a bountiful harvest")) {
         pull.bountiful = true;
       } else if (data.includes("You have found a rare item!")) {
         pull.rare = true;

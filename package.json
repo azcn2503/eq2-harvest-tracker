@@ -21,6 +21,7 @@
     "typescript": "^3.7.5"
   },
   "scripts": {
-    "start": "tsc && node built/index.js"
+    "start": "tsc && node built/index.js",
+    "debug": "tsc && node --inspect built/index.js"
   }
 }

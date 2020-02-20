@@ -19,13 +19,15 @@ export type RawType = {
 export type HarvestType = {
   count: number;
   name: string;
-  sourceNode: string;
-  rare: boolean;
+  sourceNode?: string;
+  rare?: boolean;
+  pony?: boolean;
 };
 
 export type PullType = {
   timestamp: number;
   rare: boolean;
   bountiful: boolean;
+  pony: boolean;
   harvests: HarvestType[];
 };
