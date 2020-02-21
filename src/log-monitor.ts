@@ -8,7 +8,7 @@ import { HarvestType, PullType, StatsType } from "./types";
 const HARVEST_VERB_PATTERN = `(${config.pullVerbs.join("|")})`;
 const harvestTestRegExp = new RegExp(`You ${HARVEST_VERB_PATTERN}`);
 const harvestMatchRegExp = new RegExp(
-  `You ${HARVEST_VERB_PATTERN} (\\d+) \\\\aITEM.+?:(.+?)\\\\\/a from the (.+?)\\.`
+  `You ${HARVEST_VERB_PATTERN} (a|an|\\d+) \\\\aITEM.+?:(.+?)\\\\\/a from the (.+?)\\.`
 );
 
 function buildHarvestMessage({
@@ -25,6 +25,14 @@ function buildHarvestMessage({
 
 function wrapLabel({ rare, label }: { rare: boolean; label: string }): string {
   return `${rare ? "{yellow-fg}" : ""}${label}${rare ? "{/}" : ""}`;
+}
+
+function getCount(count: string): number {
+  if (/a|an/.test(count)) {
+    return 1;
+  } else {
+    return +count;
+  }
 }
 
 class LogMonitor {
@@ -187,18 +195,18 @@ class LogMonitor {
         pull.bountiful = true;
       } else if (data.includes("You have found a rare item!")) {
         pull.rare = true;
-      } else if (harvestTestRegExp) {
+      } else if (harvestTestRegExp.exec(data)) {
         const match = harvestMatchRegExp.exec(data);
         if (match) {
           const [, verb, count, name, sourceNode] = match;
           pull.harvests.push({
-            count: +count,
+            count: getCount(count),
             name,
             sourceNode,
             rare: pull.rare
           });
           this.updateStats({
-            count: +count,
+            count: getCount(count),
             name,
             sourceNode,
             rare: pull.rare
